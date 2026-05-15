@@ -1,0 +1,143 @@
+# GUIA RAPIDA - Bici San Borja
+# Aplicacion de estaciones de bicicletas publicas
+# Conectada a Supabase en la nube
+
+================================================================================
+1. COMANDOS DISPONIBLES
+================================================================================
+
+Para usar estos comandos, abri la terminal en la carpeta del proyecto y escribi:
+
+  npm run update           ->  Subir cambios por aire (30 segundos)
+  npm run build:android    ->  Generar APK de prueba (20 minutos)
+  npm run build:android:prod ->  Generar APK final para compartir (20 min)
+  npm run start            ->  Probar en el celular con Expo Go (necesita PC)
+  npm run lint             ->  Revisar errores en el codigo
+
+================================================================================
+2. COMO ACTUALIZAR LA APP EN TU CELULAR
+================================================================================
+
+FLUJO NORMAL (Cambios de codigo, diseno, CRUD, pantallas nuevas):
+---------------------------------------------------------------------
+1. Hace los cambios en tu editor (VS Code, Cursor, etc.)
+2. Guarda los archivos
+3. En la terminal, ejecuta:  npm run update
+4. Espera 30-60 segundos
+5. Abri la app en tu celular
+6. La app se actualiza sola y muestra los cambios
+
+IMPORTANTE: No necesitas cable, no necesitas la PC prendida despues del update.
+            Solo necesitas internet en tu celular.
+
+================================================================================
+3. CUANDO NECESITO GENERAR UN NUEVO APK (20 minutos)
+================================================================================
+
+Solo genera un nuevo APK completo cuando agregues algo de esto:
+
+  - Una nueva libreria nativa (ejemplo: camara, bluetooth, notificaciones)
+  - Cambiar el icono de la app o la pantalla de carga (splash)
+  - Actualizar la version de Expo (SDK)
+  - Nuevos permisos de Android (microfono, contactos, etc.)
+
+Si solo cambias:
+  - Colores, textos, botones, layouts
+  - Nuevas pantallas o modulos
+  - Logica de negocio, formularios, CRUD
+  - Conexion con Supabase (tablas, consultas)
+
+Entonces usa:  npm run update  (No necesitas APK nuevo)
+
+================================================================================
+4. CONFIGURACION DE SUPABASE
+================================================================================
+
+Proyecto:
+  URL:     https://vsvrfggfblozaelpnbhf.supabase.co
+  Tablas:  estaciones, incidencias
+
+Para modificar datos directamente en la nube:
+  1. Anda a https://supabase.com
+  2. Entra a tu proyecto
+  3. Ve a "Table Editor"
+  4. Ahi podes ver y editar las estaciones e incidencias
+
+Credenciales en el proyecto:
+  Archivo: src/constants/config.js
+  Ahi estan la URL y la anon key (NO compartir la key con nadie)
+
+================================================================================
+5. ESTACIONES Y COORDENADAS (San Borja, Lima, Peru)
+================================================================================
+
+Estas coordenadas estan verificadas con OpenStreetMap:
+
+  1. Municipalidad de San Borja
+     Av. Joaquin de la Madrid 200
+     -12.1072, -76.9991
+
+  2. Pentagonito
+     Av. San Luis 2000
+     -12.0870, -76.9966
+
+  3. Museo de la Nacion
+     Av. Javier Prado Este 2300
+     -12.0867, -77.0019
+
+  4. Biblioteca Nacional del Peru
+     Av. Aviacion 160
+     -12.0875, -77.0048
+
+  5. Centro Comercial La Rambla
+     Av. Javier Prado Este 2050
+     -12.0894, -77.0048
+
+  6. Parque de la Felicidad
+     Parque de la Felicidad, San Borja
+     -12.1015, -76.9890
+
+================================================================================
+6. SCRIPTS SQL DE SUPABASE
+================================================================================
+
+Archivos en la carpeta /sql:
+
+  - supabase-setup.sql
+    Crea las tablas por primera vez con los datos iniciales.
+    Usar SOLO si borras la base de datos y queres empezar de cero.
+
+  - update-coordenadas.sql
+    Actualiza las coordenadas y direcciones de las estaciones.
+    Usar si necesitas corregir ubicaciones.
+
+Para ejecutar un script:
+  1. https://supabase.com/dashboard/project/vsvrfggfblozaelpnbhf
+  2. SQL Editor -> New query
+  3. Copiar y pegar el contenido del archivo .sql
+  4. Run
+
+================================================================================
+7. CONSEJOS UTILES
+================================================================================
+
+- Si la app no actualiza con "npm run update", proba cerrarla completamente
+  en el celular y volverla a abrir.
+
+- Siempre que hagas "npm run update", espera a que termine antes de cerrar
+  la terminal.
+
+- Para compartir la app con amigos, usas "npm run build:android:prod" y
+  les pasas el archivo .apk que te da Expo.
+
+- Para probar cambios rapidos sin mandar update, podes usar "npm run start"
+  pero necesitas la PC prendida y el celular en la misma red WiFi.
+
+- Si agregas imagenes nuevas a la carpeta /assets, eso SI requiere un
+  nuevo APK (npm run build:android).
+
+================================================================================
+
+Creado: 14 de mayo de 2026
+Proyecto: Bici San Borja
+Tecnologias: React Native + Expo + Supabase

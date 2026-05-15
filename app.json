@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "mi-primera-app",
-    "slug": "mi-primera-app",
+    "name": "Bici San Borja",
+    "slug": "bici-san-borja",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -19,13 +19,25 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ],
+      "package": "com.anonymous.miprimeraapp"
     },
     "web": {
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      "./plugins/with-google-maps-api-key",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Permite que MiPrimeraApp acceda a tu ubicación para mostrar las estaciones de bicicletas cercanas."
+        }
+      ],
       "expo-router",
       [
         "expo-splash-screen",
@@ -43,6 +55,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "8d0a534f-7a94-4ccd-a69b-dae6dee84b9a"
+      }
     }
   }
 }
