@@ -1,0 +1,2 @@
+export const TIEMPO_LIMITE_MINUTOS = 60;
+export const TIEMPO_ADVERTENCIA_MINUTOS = 45;

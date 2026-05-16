@@ -8,9 +8,10 @@ import {
   ActivityIndicator,
 } from "react-native";
 import * as Location from "expo-location";
-import { useRouter } from "expo-router";
-import { getEstacionesCercanas } from "../services/api";
-import Colors from "../constants/colors";
+import { useRouter, useNavigation } from "expo-router";
+import { getEstacionesCercanas } from "@/src/services/api";
+import { useAuth } from "@/src/hooks/useAuth";
+import Colors from "@/src/constants/colors";
 
 function formatearDistancia(km) {
   if (km < 1) return `${Math.round(km * 1000)} m`;
@@ -49,6 +50,8 @@ function getEstadoLabel(estado) {
 
 export default function RecomendacionesScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
+  const { logout } = useAuth();
   const [ubicacion, setUbicacion] = useState(null);
   const [recomendaciones, setRecomendaciones] = useState([]);
   const [cargando, setCargando] = useState(true);
@@ -91,6 +94,22 @@ export default function RecomendacionesScreen() {
   useEffect(() => {
     buscarRecomendaciones();
   }, [buscarRecomendaciones]);
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          onPress={logout}
+          style={{ marginRight: 16, padding: 6 }}
+          activeOpacity={0.7}
+        >
+          <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '600' }}>
+            🚪 Salir
+          </Text>
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation, logout]);
 
   const irADetalle = (estacion) => {
     router.push({

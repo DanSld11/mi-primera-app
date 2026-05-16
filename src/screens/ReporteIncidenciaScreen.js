@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -11,9 +11,10 @@ import {
   ActivityIndicator,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import { useRouter } from "expo-router";
-import { postIncidencia } from "../services/api";
-import Colors from "../constants/colors";
+import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
+import { postIncidencia, getEstaciones } from "@/src/services/api";
+import { useAuth } from "@/src/hooks/useAuth";
+import Colors from "@/src/constants/colors";
 
 const TIPOS_INCIDENCIA = [
   { id: "bicicleta_danada", label: "Bicicleta dañada", icon: "🔧" },
@@ -24,14 +25,48 @@ const TIPOS_INCIDENCIA = [
 
 export default function ReporteIncidenciaScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
+  const { logout } = useAuth();
+  const params = useLocalSearchParams();
+
+  const estacionIdParam = params.estacionId ? Number(params.estacionId) : null;
 
   const [tipo, setTipo] = useState(null);
+  const [estacionId, setEstacionId] = useState(estacionIdParam);
+  const [estaciones, setEstaciones] = useState([]);
+  const [cargandoEstaciones, setCargandoEstaciones] = useState(false);
   const [descripcion, setDescripcion] = useState("");
   const [foto, setFoto] = useState(null);
   const [enviando, setEnviando] = useState(false);
   const [enviado, setEnviado] = useState(false);
 
   const MAX_CARACTERES = 200;
+
+  useEffect(() => {
+    if (!estacionIdParam) {
+      setCargandoEstaciones(true);
+      getEstaciones()
+        .then((data) => setEstaciones(data || []))
+        .catch(() => {})
+        .finally(() => setCargandoEstaciones(false));
+    }
+  }, [estacionIdParam]);
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          onPress={logout}
+          style={{ marginRight: 16, padding: 6 }}
+          activeOpacity={0.7}
+        >
+          <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '600' }}>
+            🚪 Salir
+          </Text>
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation, logout]);
 
   const seleccionarFoto = async (desdeCamara = false) => {
     const permiso =
@@ -76,10 +111,7 @@ export default function ReporteIncidenciaScreen() {
   const quitarFoto = () => setFoto(null);
 
   const enviarReporte = async () => {
-    if (!tipo) {
-      Alert.alert("Falta información", "Selecciona el tipo de incidencia.");
-      return;
-    }
+    if (!validarEnvio()) return;
 
     setEnviando(true);
 
@@ -87,7 +119,7 @@ export default function ReporteIncidenciaScreen() {
       await postIncidencia({
         tipo,
         descripcion: descripcion.trim(),
-        estacionId: 1,
+        estacionId,
       });
       setEnviado(true);
     } catch {
@@ -105,6 +137,18 @@ export default function ReporteIncidenciaScreen() {
     setDescripcion("");
     setFoto(null);
     setEnviado(false);
+  };
+
+  const validarEnvio = () => {
+    if (!tipo) {
+      Alert.alert("Falta información", "Selecciona el tipo de incidencia.");
+      return false;
+    }
+    if (!estacionId && estacionId !== 0) {
+      Alert.alert("Falta información", "Selecciona la estación.");
+      return false;
+    }
+    return true;
   };
 
   if (enviado) {
@@ -167,6 +211,40 @@ export default function ReporteIncidenciaScreen() {
         ))}
       </View>
 
+      {/* Selector de estación */}
+      {!estacionIdParam && (
+        <View style={styles.estacionSeccion}>
+          <Text style={styles.seccionTitulo}>Estación *</Text>
+          {cargandoEstaciones ? (
+            <ActivityIndicator size="small" color={Colors.primary} />
+          ) : (
+            <View style={styles.estacionGrid}>
+              {estaciones.map((est) => (
+                <TouchableOpacity
+                  key={est.id}
+                  style={[
+                    styles.estacionChip,
+                    estacionId === est.id && styles.estacionChipSeleccionado,
+                  ]}
+                  onPress={() => setEstacionId(est.id)}
+                  activeOpacity={0.7}
+                >
+                  <Text
+                    style={[
+                      styles.estacionChipTexto,
+                      estacionId === est.id && styles.estacionChipTextoSeleccionado,
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {est.nombre}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        </View>
+      )}
+
       {/* Descripción */}
       <Text style={styles.seccionTitulo}>Descripción</Text>
       <View style={styles.descripcionContenedor}>
@@ -222,7 +300,7 @@ export default function ReporteIncidenciaScreen() {
 
       {/* Botón enviar */}
       <TouchableOpacity
-        style={[styles.botonEnviar, !tipo && styles.botonEnviarDeshabilitado]}
+        style={[styles.botonEnviar, (!tipo || (!estacionId && estacionId !== 0)) && styles.botonEnviarDeshabilitado]}
         onPress={enviarReporte}
         activeOpacity={0.8}
         disabled={enviando}
@@ -455,5 +533,34 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.textSecondary,
     fontWeight: "500",
+  },
+  estacionSeccion: {
+    marginBottom: 8,
+  },
+  estacionGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  estacionChip: {
+    backgroundColor: Colors.surface,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+  },
+  estacionChipSeleccionado: {
+    borderColor: Colors.primary,
+    backgroundColor: Colors.primaryLight,
+  },
+  estacionChipTexto: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: Colors.textSecondary,
+    maxWidth: 120,
+  },
+  estacionChipTextoSeleccionado: {
+    color: Colors.primary,
   },
 });

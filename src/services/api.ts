@@ -1,8 +1,20 @@
 import supabase from "./supabase";
 
-// Fórmula de Haversine para calcular distancia entre dos puntos (km)
-function haversine(lat1, lng1, lat2, lng2) {
-  const R = 6371; // Radio de la Tierra en km
+interface Estacion {
+  id: number;
+  nombre: string;
+  direccion: string;
+  latitud: number;
+  longitud: number;
+  bicicletasDisponibles: number;
+  capacidadTotal: number;
+  estado: string;
+  created_at?: string;
+  distancia?: number;
+}
+
+function haversine(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLng = ((lng2 - lng1) * Math.PI) / 180;
   const a =
@@ -15,24 +27,21 @@ function haversine(lat1, lng1, lat2, lng2) {
   return R * c;
 }
 
-// Supabase devuelve columnas en snake_case, la app espera camelCase
-function mapEstacion(row) {
-  if (!row) return null;
+function mapEstacion(row: Record<string, unknown>): Estacion {
   return {
-    id: row.id,
-    nombre: row.nombre,
-    direccion: row.direccion,
-    latitud: row.latitud,
-    longitud: row.longitud,
-    bicicletasDisponibles: row.bicicletas_disponibles,
-    capacidadTotal: row.capacidad_total,
-    estado: row.estado,
-    created_at: row.created_at,
+    id: row.id as number,
+    nombre: row.nombre as string,
+    direccion: row.direccion as string,
+    latitud: row.latitud as number,
+    longitud: row.longitud as number,
+    bicicletasDisponibles: row.bicicletas_disponibles as number,
+    capacidadTotal: row.capacidad_total as number,
+    estado: row.estado as string,
+    created_at: row.created_at as string | undefined,
   };
 }
 
-// GET /estaciones
-export async function getEstaciones() {
+export async function getEstaciones(): Promise<Estacion[]> {
   const { data, error } = await supabase
     .from("estaciones")
     .select("*")
@@ -42,8 +51,7 @@ export async function getEstaciones() {
   return (data || []).map(mapEstacion);
 }
 
-// GET /estaciones/:id
-export async function getEstacionById(id) {
+export async function getEstacionById(id: number): Promise<Estacion> {
   const { data, error } = await supabase
     .from("estaciones")
     .select("*")
@@ -54,26 +62,29 @@ export async function getEstacionById(id) {
   return mapEstacion(data);
 }
 
-// GET /estaciones/cercanas?lat=X&lng=Y
-export async function getEstacionesCercanas(lat, lng) {
+export async function getEstacionesCercanas(lat: number, lng: number): Promise<Estacion[]> {
   const { data, error } = await supabase
     .from("estaciones")
     .select("*");
 
   if (error) throw error;
 
-  const estaciones = (data || []).map((est) => {
+  const estaciones: Estacion[] = (data || []).map((est: Record<string, unknown>) => {
     const mapped = mapEstacion(est);
     mapped.distancia = haversine(lat, lng, mapped.latitud, mapped.longitud);
     return mapped;
   });
 
-  estaciones.sort((a, b) => a.distancia - b.distancia);
+  estaciones.sort((a, b) => a.distancia! - b.distancia!);
   return estaciones;
 }
 
-// POST /incidencias
-export async function postIncidencia(datos) {
+export async function postIncidencia(datos: {
+  tipo: string;
+  descripcion?: string;
+  estacionId?: number | null;
+  foto?: string | null;
+}): Promise<Record<string, unknown>> {
   const { data, error } = await supabase
     .from("incidencias")
     .insert([
@@ -92,3 +103,4 @@ export async function postIncidencia(datos) {
 }
 
 export default supabase;
+export type { Estacion };

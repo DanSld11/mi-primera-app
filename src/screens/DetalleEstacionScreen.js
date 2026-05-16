@@ -7,9 +7,11 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
-import { getEstacionById, getEstacionesCercanas } from "../services/api";
-import Colors from "../constants/colors";
+import { useRouter, useLocalSearchParams, useNavigation } from "expo-router";
+import { getEstacionById, getEstacionesCercanas } from "@/src/services/api";
+import { useAuth } from "@/src/hooks/useAuth";
+import { useViaje } from "@/src/context/ViajeContext";
+import Colors from "@/src/constants/colors";
 
 function getEstadoColor(estado) {
   switch (estado) {
@@ -54,11 +56,30 @@ function getBadgeColor(estado) {
 export default function DetalleEstacionScreen() {
   const { estacion: estacionJSON } = useLocalSearchParams();
   const router = useRouter();
+  const navigation = useNavigation();
+  const { logout } = useAuth();
+  const { isViajeActivo } = useViaje();
 
   const [estacion, setEstacion] = useState(null);
   const [alternativas, setAlternativas] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          onPress={logout}
+          style={{ marginRight: 16, padding: 6 }}
+          activeOpacity={0.7}
+        >
+          <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '600' }}>
+            🚪 Salir
+          </Text>
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation, logout]);
 
   useEffect(() => {
     const inicial = estacionJSON ? JSON.parse(estacionJSON) : null;
@@ -260,11 +281,39 @@ export default function DetalleEstacionScreen() {
         </View>
       )}
 
+      {/* Botón escanear QR */}
+      {isViajeActivo && (
+        <TouchableOpacity
+          style={styles.botonViajeActivo}
+          onPress={() => router.push("/viaje-activo")}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.botonViajeActivoTexto}>Tienes un viaje en curso — Ver viaje</Text>
+        </TouchableOpacity>
+      )}
+      {!isViajeActivo && estacion.estado !== "vacia" && (
+        <TouchableOpacity
+          style={styles.botonQr}
+          onPress={() =>
+            router.push({
+              pathname: "/escanear-qr",
+              params: { estacionId: String(estacion.id) },
+            })
+          }
+          activeOpacity={0.8}
+        >
+          <Text style={styles.botonQrTexto}>Escanear QR de bicicleta</Text>
+        </TouchableOpacity>
+      )}
+
       {/* Botón reportar incidencia */}
       <TouchableOpacity
         style={styles.botonReporte}
         onPress={() =>
-          router.push("/reporte-incidencia")
+          router.push({
+            pathname: "/reporte-incidencia",
+            params: { estacionId: String(estacion.id) },
+          })
         }
         activeOpacity={0.8}
       >
@@ -526,6 +575,35 @@ const styles = StyleSheet.create({
   },
 
   // Botón volver
+  botonQr: {
+    backgroundColor: Colors.primary,
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: "center",
+    marginBottom: 12,
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 8,
+  },
+  botonQrTexto: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  botonViajeActivo: {
+    backgroundColor: "#D1FAE5",
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginBottom: 12,
+    borderWidth: 1.5,
+    borderColor: Colors.estadoDisponible,
+  },
+  botonViajeActivoTexto: {
+    color: "#065F46",
+    fontSize: 15,
+    fontWeight: "600",
+  },
   botonReporte: {
     backgroundColor: "#FFF7ED",
     borderRadius: 12,

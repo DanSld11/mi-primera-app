@@ -64,7 +64,8 @@ Para modificar datos directamente en la nube:
   4. Ahi podes ver y editar las estaciones e incidencias
 
 Credenciales en el proyecto:
-  Archivo: src/constants/config.js
+  Archivo: src/constants/config.ts
+  Variables de entorno: .env
   Ahi estan la URL y la anon key (NO compartir la key con nadie)
 
 ================================================================================
